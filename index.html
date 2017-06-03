@@ -18,13 +18,18 @@
             box-sizing: border-box;
         }
 
+        body {
+            background: #F2F1EF;
+        }
+
         .container {
             width: 80%;
             margin: 0 auto;
-            /*background: #999;*/
             display: flex;
             flex-direction: column;
             align-items: center;
+            color: #6C7A89;
+            font-size: 20px;
         }
 
         .row {
@@ -35,11 +40,11 @@
         }
 
         .barcode-text-div, .arrows-div {
-            border-right: 1px solid #ccc;
+            border-right: 1px solid #95A5A6;
         }
 
         .top-row {
-            border-bottom: 1px solid #ccc;
+            border-bottom: 1px solid #95A5A6;
         }
 
         .block {
@@ -51,7 +56,6 @@
         }
 
         .flex-column {
-            /*font-size: 16px;*/
             display: flex;
             flex-direction: column;
             justify-content: space-around;
@@ -71,31 +75,34 @@
         input[name=arrows] ~ label {
             font-size: 36px;
             font-weight: bold;
+            border-bottom: 3px solid #fff;
+            width: 50px;
+            text-align: center;
         }
 
         #arrow-none:checked ~ label {
-            color: red;
+            border-bottom: 3px solid #F4D03F;
         }
 
         #arrow-up:checked ~ label {
-            color: red;
+            border-bottom: 3px solid #F4D03F;
         }
 
         #arrow-down:checked ~ label {
-            color: red;
+            border-bottom: 3px solid #F4D03F;
         }
 
         #arrow-left:checked ~ label {
-            color: red;
+            border-bottom: 3px solid #F4D03F;
         }
 
         #arrow-right:checked ~ label {
-            color: red;
+            border-bottom: 3px solid #F4D03F;
         }
 
         .bottom-row {
             margin-top: 25px;
-            border-top: 1px solid #ccc;
+            border-top: 1px solid #95A5A6;
             padding-top: 25px;
             justify-content: space-around;
         }
@@ -103,10 +110,9 @@
         .button {
             font-size: 18px;
             line-height: 18px;
-            border: 1px solid #999;
             padding: 15px;
             user-select: none;
-            background: #eee;
+            position: relative;
         }
 
         .button:not(.disabled) {
@@ -114,15 +120,12 @@
         }
 
         .button:not(.disabled):hover {
-            border-radius: 25px;
+            transform: scale(1.1);
             cursor: pointer;
-            transform: scale(1.2);
-            background: #1af;
         }
 
         .button:not(.disabled):active {
-            transform: scale(1.1);
-            background: #2bf;
+            transform: scale(1);
         }
 
         .button.disabled {
@@ -130,16 +133,65 @@
             border: 1px solid #ddd;
         }
 
+        .button.make-barcode {
+            border: 1px solid #87D37C;
+            color: #87D37C;
+        }
+
+        .button.make-barcode:hover {
+            background: rgba(135, 211, 124, .8);
+            color: #fff;
+            border: 1px solid #fff;
+        }
+
+        .button.download-barcode:not(.disabled) {
+            border: 1px solid #81CFE0;
+            color: #81CFE0;
+        }
+
+        .button.download-barcode:not(.disabled):hover {
+            background: rgba(129, 207, 224, .8);
+            color: #fff;
+            border: 1px solid #fff;
+        }
+
+        .button.delete-barcode:not(.disabled) {
+            border: 1px solid #F62459;
+            color: #F62459;
+        }
+
+        .button.delete-barcode:not(.disabled):hover {
+            background: rgba(246, 36, 89, .8);
+            color: #fff;
+            border: 1px solid #fff;
+        }
+
         .barcode {
             width: 100%;
             margin-top: 25px;
-            border-top: 1px solid #ccc;
+            border-top: 1px solid #95A5A6;
             display: flex;
             justify-content: center;
         }
 
-        .barcode > img {
+        #barcode {
             margin-top: 30px;
+        }
+
+        .error {
+            color: #CF000F;
+        }
+
+        .error:before {
+            content: "***";
+        }
+
+        .error:after {
+            content: "***";
+        }
+
+        .error.disabled {
+            display: none;
         }
 
     </style>
@@ -203,8 +255,9 @@
                 <div class="button delete-barcode disabled">Delete Barcode</div>
             </div>
         </div>
-        <div class="barcode" id="barcode">
-
+        <div class="barcode">
+            <span class="error disabled"></span>
+            <div id="barcode"></div>
         </div>
     </div>
     <script>
@@ -224,7 +277,8 @@
             barcodeDiv = document.querySelector("#barcode"),
             makeBarcodeBtn = document.querySelector(".make-barcode"),
             downloadBarcodeBtn = document.querySelector(".download-barcode"),
-            deleteBarcodeBtn = document.querySelector(".delete-barcode");
+            deleteBarcodeBtn = document.querySelector(".delete-barcode"),
+            errorText = document.querySelector(".error");
 
         // add event listeners to buttons and inputs
         makeBarcodeBtn.addEventListener("click", makeBarcode);
@@ -262,6 +316,10 @@
 
         function makeBarcode() {
             if(barcodeTextInput.value) {
+
+                if(!errorText.classList.contains("disabled")) {
+                    errorText.classList.add("disabled");
+                }
 
                 var barcodeText = barcodeTextInput.value,
                     backColor = backColorInput.value,
@@ -330,6 +388,9 @@
                     downloadBarcodeBtn.classList.remove("disabled");
                     deleteBarcodeBtn.classList.remove("disabled");
                 }
+            } else {
+                errorText.innerHTML = "You must provide text for the barcode before it can be made."
+                errorText.classList.remove("disabled");
             }
         }
 

@@ -62,6 +62,37 @@
             margin-bottom: 5px;
         }
 
+        input[name=arrows] {
+            position: absolute;
+            top: -9999px;
+            left: -9999px;
+        }
+
+        input[name=arrows] ~ label {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        #arrow-none:checked ~ label {
+            color: red;
+        }
+
+        #arrow-up:checked ~ label {
+            color: red;
+        }
+
+        #arrow-down:checked ~ label {
+            color: red;
+        }
+
+        #arrow-left:checked ~ label {
+            color: red;
+        }
+
+        #arrow-right:checked ~ label {
+            color: red;
+        }
+
         .bottom-row {
             margin-top: 25px;
             border-top: 1px solid #ccc;
@@ -69,14 +100,46 @@
             justify-content: space-around;
         }
 
-        button {
+        .button {
             font-size: 18px;
+            line-height: 18px;
+            border: 1px solid #999;
+            padding: 15px;
+            user-select: none;
+            background: #eee;
+        }
+
+        .button:not(.disabled) {
+            transition: all .25s ease-in-out;
+        }
+
+        .button:not(.disabled):hover {
+            border-radius: 25px;
+            cursor: pointer;
+            transform: scale(1.2);
+            background: #1af;
+        }
+
+        .button:not(.disabled):active {
+            transform: scale(1.1);
+            background: #2bf;
+        }
+
+        .button.disabled {
+            color: #ddd;
+            border: 1px solid #ddd;
         }
 
         .barcode {
             width: 100%;
             margin-top: 25px;
             border-top: 1px solid #ccc;
+            display: flex;
+            justify-content: center;
+        }
+
+        .barcode > img {
+            margin-top: 30px;
         }
 
     </style>
@@ -103,24 +166,24 @@
             <div class="row middle-row">
                 <div class="block arrows-div">
                     <div class="flex-column">
-                        <label for="arrow-none">None</label>
-                        <input type="radio" id="arrow-none" checked name="arrows" value="none">
+                        <input type="radio" id="arrow-none" checked="true" name="arrows" value="none">
+                        <label for="arrow-none">&#9747;</label>
                     </div>
                     <div class="flex-column">
-                        <label for="arrow-up">Up</label>
                         <input type="radio" id="arrow-up" name="arrows" value="up">
+                        <label for="arrow-up">&#8593;</label>
                     </div>
                     <div class="flex-column">
-                        <label for="arrow-down">Down</label>
                         <input type="radio" id="arrow-down" name="arrows" value="down">
+                        <label for="arrow-down">&#8595;</label>
                     </div>
                     <div class="flex-column">
-                        <label for="arrow-left">Left</label>
                         <input type="radio" id="arrow-left" name="arrows" value="left">
+                        <label for="arrow-left">&#8592;</label>
                     </div>
                     <div class="flex-column">
-                        <label for="arrow-right">Right</label>
                         <input type="radio" id="arrow-right" name="arrows" value="right">
+                        <label for="arrow-right">&#8594;</label>
                     </div>
                 </div>
                 <div class="block size-selection-div">
@@ -135,9 +198,9 @@
                 </div>
             </div>
             <div class="row bottom-row">
-                <button class="make-barcode">Make Barcode</button>
-                <button class="download-barcode" disabled>Download Barcode</button>
-                <button class="delete-barcode" disabled>Delete Barcode</button>
+                <div class="button make-barcode">Make Barcode</div>
+                <div class="button download-barcode disabled">Download Barcode</div>
+                <div class="button delete-barcode disabled">Delete Barcode</div>
             </div>
         </div>
         <div class="barcode" id="barcode">
@@ -145,6 +208,7 @@
         </div>
     </div>
     <script>
+        // query dom for all the necessary elements
         var barcodeTextInput = document.querySelector("#barcode-text"),
             backColorInput = document.querySelector("#back-color"),
             frontColorInput = document.querySelector("#front-color"),
@@ -162,12 +226,30 @@
             downloadBarcodeBtn = document.querySelector(".download-barcode"),
             deleteBarcodeBtn = document.querySelector(".delete-barcode");
 
+        // add event listeners to buttons and inputs
         makeBarcodeBtn.addEventListener("click", makeBarcode);
         downloadBarcodeBtn.addEventListener("click", downloadBarcode);
         deleteBarcodeBtn.addEventListener("click", deleteBarcode);
+        barcodeTextInput.addEventListener("keypress", handleEnter);
+        barcodeWidthInput.addEventListener("change", handleChange);
+        barcodeHeightInput.addEventListener("change", handleChange);
+        backColorInput.addEventListener("change", handleChange);
+        frontColorInput.addEventListener("change", handleChange);
+        Object.keys(arrowInputs).forEach(function(a) {
+            arrowInputs[a].addEventListener("change", handleChange);
+        });
 
-        console.log("idk");
-            
+        // functions to...you know...do stuff
+        function handleChange(e) {
+            makeBarcode();
+        }
+
+        function handleEnter(e) {
+            if(e.keyCode === 13) {
+                makeBarcode();
+            }
+        }
+
         function getArrow(arrowInputs) {
             var result;
             Object.keys(arrowInputs).forEach(function(arrow) {
@@ -186,6 +268,7 @@
                     frontColor = frontColorInput.value,
                     barcodeWidth = barcodeWidthInput.value,
                     barcodeHeight = barcodeHeightInput.value,
+                    arrow = getArrow(arrowInputs),
                     oldBarcodeImg = document.querySelector("#barcode > img"),
                     oldBarcodeCanvas = document.querySelector("#barcode > canvas");
 
@@ -203,19 +286,137 @@
                     correctLevel: QRCode.CorrectLevel.H
                 });
 
+                // get canvas element
+                var canvas = document.querySelector("#barcode > canvas");
+                var ctx = canvas.getContext("2d");
+                // save out barcode picture data
+                var barcodeData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                // add 2 to the width of the canvas for the border
+                canvas.width += 12;
+                // add 50 to the height of the canvas to add the barcode text at the bottom
+                canvas.height += 62;
+                // set background to background color and fill it
+                ctx.fillStyle = backColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                // add border around the whole canvas
+                ctx.stroke();
+                ctx.strokeStyle = "black";
+                ctx.rect(0, 0, canvas.width, canvas.height);
+                ctx.stroke();
+                // make border around 
+                // put the barcode image back on the canvas
+                ctx.putImageData(barcodeData, 5, 5);
+                ctx.fillStyle = frontColor;
+                ctx.font = "bold 25px Segoe UI";
+                ctx.fillText(barcodeText, (canvas.width/2)-ctx.measureText(barcodeText).width/2, canvas.height - 13);
+                // add arrow
+                if(arrow !== "none") {
+                    var arrowSize = 45,
+                        startX = canvas.width - arrowSize - 2,
+                        startY = canvas.height - arrowSize - 2,
+                        arrowCoords = getArrowCoords(arrow, startX, startY, arrowSize);
+                    ctx.fillStyle = frontColor;
+                    ctx.strokeStyle = frontColor;
+                    ctx.beginPath();
+                    ctx.moveTo(arrowCoords[0].x, arrowCoords[0].y);
+                    for(i=0;i<arrowCoords.length;i++) {
+                        ctx.lineTo(arrowCoords[i].x, arrowCoords[i].y);
+                    }
+                    ctx.stroke();
+                    ctx.fill();
+                }
+
                 if(barcodeDiv.hasChildNodes()) {
-                    downloadBarcodeBtn.disabled = false;
-                    deleteBarcodeBtn.disabled = false;
+                    downloadBarcodeBtn.classList.remove("disabled");
+                    deleteBarcodeBtn.classList.remove("disabled");
                 }
             }
         }
 
         function downloadBarcode() {
-
+            var a = document.createElement('a');
+            if(document.querySelector("canvas").msToBlob) { // check for IE
+                var blob = document.querySelector("canvas").msToBlob();
+                window.navigator.msSaveBlob(blob, barcodeTextInput.value + ".png");
+            } else { // every other browser
+                a.href = document.querySelector("#barcode > canvas").toDataURL();
+                a.download = barcodeTextInput.value;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+            }
         }
 
         function deleteBarcode() {
+            var oldBarcodeImg = document.querySelector("#barcode > img"),
+                oldBarcodeCanvas = document.querySelector("#barcode > canvas");
 
+            if(oldBarcodeImg) {
+                barcodeDiv.removeChild(oldBarcodeImg);
+                barcodeDiv.removeChild(oldBarcodeCanvas);
+                downloadBarcodeBtn.classList.add("disabled");
+                deleteBarcodeBtn.classList.add("disabled");              
+            }
+        }    
+        
+        function getArrowCoords(arrowType, startX, startY, arrowSize) {
+            var left = startX,
+                right = startX + arrowSize,
+                w = right - left,
+                w3 = w*.33,
+                w33 = left+w3,
+                w5 = w*.5,
+                w50 = left+w5,
+                w6 = w*.66,
+                w66 = left+w6,
+                top = startY,
+                bottom = startY + arrowSize,
+                h = bottom - top,
+                h3 = h*.33,
+                h33 = top+h3,
+                h5 = h*.5,
+                h50 = top+h5,
+                h6 = h*.66,
+                h66 = top+h6,
+                arrows = {
+                up: [
+                    {x: w50, y: top},
+                    {x: right, y: h33},
+                    {x: w66, y: h33},
+                    {x: w66, y: bottom},
+                    {x: w33, y: bottom},
+                    {x: w33, y: h33},
+                    {x: left, y: h33}
+                ],
+                down: [
+                    {x: w33, y: top},
+                    {x: w66, y: top},
+                    {x: w66, y: h66},
+                    {x: right, y: h66},
+                    {x: w50, y: bottom},
+                    {x: left, y: h66},
+                    {x: w33, y: h66}
+                ], 
+                left: [
+                    {x: left, y: h50},
+                    {x: w33, y: top},
+                    {x: w33, y: h33},
+                    {x: right, y: h33},
+                    {x: right, y: h66},
+                    {x: w33, y: h66},
+                    {x: w33, y: bottom}
+                ],
+                right: [
+                    {x: left, y: h33},
+                    {x: w66, y: h33},
+                    {x: w66, y: top},
+                    {x: right, y: h50},
+                    {x: w66, y: bottom},
+                    {x: w66, y: h66},
+                    {x: left, y: h66}
+                ]
+                };
+            return arrows[arrowType];
         }
         
     </script>

@@ -167,7 +167,7 @@
         }
 
         .barcode {
-            width: 100%;
+            width: 80%;
             margin-top: 25px;
             border-top: 1px solid #95A5A6;
             display: flex;
@@ -192,6 +192,50 @@
 
         .error.disabled {
             display: none;
+        }
+
+        @media (max-width: 900px) {
+            .row {
+                flex-direction: column;
+            }
+
+            .top-row {
+                border-bottom: none;
+            }
+
+            .bottom-row {
+                border-top: none;
+                flex-direction: row;
+                justify-content: space-around;
+                padding: 0;
+            }
+
+            .barcode-text-div, .arrows-div {
+                border-right: none;
+            }
+
+            .download-barcode {
+                margin: 0 10px;
+            }
+
+            .block {
+                border-bottom: 1px solid #95A5A6;
+            }
+        }
+
+        @media (max-width: 675px) {
+            .button {
+                text-align: center;
+                padding: 10px;
+            }
+
+            .bottom-row {
+                
+            }
+
+            .barcode {
+                width: 90%;
+            }
         }
 
     </style>
